@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mappa con Coordinate e ZIP Code</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 0; }
+        #map { width: 100%; height: 500px; margin-top: 10px; }
+        input { width: 300px; padding: 8px; margin: 10px; }
+        button { padding: 8px 15px; cursor: pointer; }
+        #zip-code { font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h2>Inserisci le coordinate (latitudine, longitudine)</h2>
+    <input type="text" id="coordinates" placeholder="Esempio: 45.4642, 9.1900">
+    <button onclick="updateMap()">Conferma</button>
+
+    <div id="map"></div>
+    <p id="zip-code"></p> <!-- Mostrerà il codice postale -->
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([41.9028, 12.4964], 6); // Inizializza la mappa centrata sull'Italia
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        var marker; // Variabile per il segnaposto
+
+        function updateMap() {
+            var input = document.getElementById("coordinates").value.trim();
+            
+            // Converte solo la prima e l'ultima virgola in punto
+            input = input.replace(/^([^,]+),/, '$1.').replace(/,([^,]+)$/, '.$1');
+
+            var coords = input.split(",").map(c => parseFloat(c.trim()));
+
+            if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+                if (marker) {
+                    map.removeLayer(marker);
+                }
+                marker = L.marker(coords).addTo(map)
+                    .bindPopup("Coordinate: " + coords[0] + ", " + coords[1])
+                    .openPopup();
+
+                map.setView(coords, 13);
+
+                // Ottenere il codice postale con Reverse Geocoding
+                getZipCode(coords[0], coords[1]);
+
+            } else {
+                alert("Inserisci le coordinate nel formato corretto: latitudine, longitudine");
+            }
+        }
+
+        function getZipCode(lat, lon) {
+            var url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    var zip = data.address.postcode || "Non trovato";
+                    document.getElementById("zip-code").innerText = "Codice Postale: " + zip;
+                })
+                .catch(error => {
+                    document.getElementById("zip-code").innerText = "Errore nel recupero del codice postale";
+                    console.error("Errore nel reverse geocoding:", error);
+                });
+        }
+    </script>
+
+</body>
+</html>

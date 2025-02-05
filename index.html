@@ -11,6 +11,8 @@
             text-align: center;
             margin: 0;
             padding: 0;
+            overflow: hidden; /* Evita lo scroll dovuto ai cioccolatini */
+            position: relative;
         }
 
         .container {
@@ -21,6 +23,8 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 10; /* Mantiene il contenuto leggibile sotto i cioccolatini */
         }
 
         h1 {
@@ -63,6 +67,27 @@
 
         button:hover {
             background: #a0522d;
+        }
+
+        /* Stile per i cioccolatini che cadono */
+        .chocolate {
+            position: absolute;
+            font-size: 2rem;
+            user-select: none;
+            pointer-events: none;
+            z-index: 100; /* Fa sì che i cioccolatini stiano sopra a tutto */
+            animation: fall linear infinite, rotate linear infinite;
+        }
+
+        @keyframes fall {
+            from {
+                transform: translateY(var(--startY)) rotate(0deg); /* Inizia fuori dallo schermo */
+                opacity: 1;
+            }
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
         }
 
         @media (max-width: 500px) {
@@ -111,6 +136,47 @@
                     button.disabled = true;
                 }
             });
+
+            // Funzione per generare i cioccolatini che cadono con rotazione casuale
+            function createChocolate() {
+                const chocolate = document.createElement("div");
+                chocolate.classList.add("chocolate");
+                chocolate.innerText = "🍫";
+                document.body.appendChild(chocolate);
+
+                // Posizione casuale sull'asse X
+                const startX = Math.random() * window.innerWidth;
+                chocolate.style.left = `${startX}px`;
+
+                // Dimensione casuale
+                const size = Math.random() * 20 + 20; // tra 20px e 40px
+                chocolate.style.fontSize = `${size}px`;
+
+                // Durata casuale della caduta
+                const duration = Math.random() * 3 + 2; // tra 2 e 5 secondi
+                chocolate.style.animationDuration = `${duration}s, ${duration * 0.8}s`; // Rotazione leggermente più veloce
+
+                // Angolo di partenza casuale per la rotazione
+                const startRotation = Math.random() * 360;
+                chocolate.style.transform = `rotate(${startRotation}deg)`;
+
+                // Altezza casuale di partenza (tra -200px e -500px)
+                const startY = Math.random() * -300 - 200;
+                chocolate.style.setProperty("--startY", `${startY}px`);
+
+                // Rimuove il cioccolatino quando l'animazione termina
+                chocolate.addEventListener("animationend", () => {
+                    chocolate.remove();
+                });
+            }
+
+            // Avvia la pioggia di cioccolatini immediatamente
+            setInterval(createChocolate, 300);
+
+            // Avvia subito una prima serie di cioccolatini per un effetto immediato
+            for (let i = 0; i < 10; i++) {
+                setTimeout(createChocolate, Math.random() * 1000);
+            }
         });
     </script>
 </body>
